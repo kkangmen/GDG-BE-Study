@@ -22,7 +22,7 @@
 - Spring Boot: 복잡한 초기 설정(WAS 등) 간편하게 Spring을 사용할 수 있게 해주는 도구.
 ## Spring Start
 
-![test.png](../../../OneDrive/%EB%B0%94%ED%83%95%20%ED%99%94%EB%A9%B4/gdcs/HW1/test.png)
+![img.png](img.png)
 
 ## 쇼핑몰 API 명세서
 
