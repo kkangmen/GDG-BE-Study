@@ -45,8 +45,8 @@
 - DB에서 수행되는 작업의 단위
 - 여러 DB연산을 하나의 논리적인 작업 단위로 묶어서 실행
 
-    - 모든 연산이 성공적으로 수행되면 트랜잭션을 커밋하여 DB에 반영
-    - 하나라도 실패하면 롤백하여 이전 상태로 되돌림
+  - 모든 연산이 성공적으로 수행되면 트랜잭션을 커밋하여 DB에 반영
+  - 하나라도 실패하면 롤백하여 이전 상태로 되돌림
 - **쓰기 지연**
   DB에 바로 쓰지 않고, 변경사항들을 영속성 컨텍스트에 모아두었다가 트랜잭션이 커밋되는 시점에 한 번에 묶어서 DB에 보냄.
 - **변경 감지**
@@ -67,3 +67,192 @@
   `em.find(member1)` -> 영속성 컨텍스트 확인, 없다면 DB조회 후 1차 캐시에 저장
   `em.remove(member1)` -> 멤버 엔티티 1번 삭제
   `DELETE member1 from table` -> DB에서 entity 삭제
+
+## 구현코드
+- 회원 기능
+
+  - 회원 등록
+  - 회원 목록 조회
+  - 개별 회원 정보 상세 조회
+  - 회원 정보 수정
+  - 회원 삭제
+
+**Item 도메인**
+``` java
+@Getter
+@Setter
+@Entity // JPA는 이 클래스의 객체들을 영속성 컨텍스트로 관리하겠다.(Item 테이블로 인식)
+@NoArgsConstructor
+public class Item {
+
+    // Item 테이블의 PK를 의미한다.
+    @Id
+    // PK값은 자동으로 생성된다. 개발자가 객체를 persist하려고 할 때, ID값을 비워두고 INSERT 쿼리를 보낸다
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long itemId;
+    private String itemName;
+    private Integer price;
+    private Integer quantity;
+
+    public Item(String itemName, Integer price, Integer quantity) {
+        this.itemName = itemName;
+        this.price = price;
+        this.quantity = quantity;
+    }
+}
+```
+- `@Entity`: JPA의 `EntityManager`가 영속성 컨텍스트에 관리할 객체들을 명시하기 위한 어노테이션
+- `@Id`: 해당 클래스 테이블의 PK를 의미
+- `@GeneratedValue(strateget = GenerationType.IDENTITY)`: PK의 값이 자동으로 늘어나게 된다.(itemId가 PK로 하나씩 자동으로 증가됨)
+
+**ItemController**
+``` java
+@Slf4j
+@Controller
+@RequiredArgsConstructor
+@RequestMapping("/items")
+public class ItemController {
+
+    private final ItemService itemService;
+
+    // 상품 등록
+    @PostMapping
+    public ResponseEntity<Void> createItem(@RequestBody ItemCreateRequest request){
+        Long itemId = itemService.createItem(request);
+
+        log.info("itemId: {}", itemId);
+
+        return ResponseEntity.created(URI.create("/items/" + itemId)).build();
+    }
+
+    // 상품 목록 조회
+    @GetMapping
+    public ResponseEntity<List<Item>> getAllItems(){
+        List<Item> itemList = itemService.getAllItems();
+        return ResponseEntity.ok(itemList);
+    }
+
+    // 개별 상품 정보 상세 조회
+    @GetMapping("/{itemId}")
+    public ResponseEntity<Item> getItem(@PathVariable Long itemId){
+        Item item = itemService.getItem(itemId);
+        return ResponseEntity.ok(item);
+    }
+
+    // 상품 정보 수정
+    @PatchMapping("/{itemId}")
+    public ResponseEntity<Void> updateItem(@PathVariable Long itemId, @RequestBody ItemUpdateRequest request){
+        itemService.updateItem(itemId, request);
+        return ResponseEntity.ok().build();
+    }
+
+    // 상품 삭제
+    @DeleteMapping("/{itemId}")
+    public ResponseEntity<Void> deleteItem(@PathVariable Long itemId){
+        itemService.deleteItem(itemId);
+        return ResponseEntity.ok().build();
+    }
+}
+```
+
+**ItemService**
+``` java
+@Service
+@RequiredArgsConstructor
+public class ItemService {
+
+    private final ItemRepository itemRepository;
+
+    // 상품 정보 등록
+    @Transactional
+    public Long createItem(ItemCreateRequest request){
+        Item item = new Item(request.getItemName(), request.getPrice(), request.getQuantity());
+
+        itemRepository.save(item);
+        return item.getItemId();
+    }
+
+    // 상품 목록 조회
+    @Transactional
+    public List<Item> getAllItems(){
+        return itemRepository.findAll();
+    }
+
+    // 개별 상품 정보 상세 조회
+    @Transactional
+    public Item getItem(Long itemId){
+        Item item = itemRepository.findById(itemId);
+
+        if (item == null){
+            throw new RuntimeException("아이템이 존재하지 않습니다.");
+        }
+
+        return item;
+    }
+
+    // 상품 정보 수정
+    @Transactional
+    public void updateItem(Long itemId, ItemUpdateRequest request){
+        Item item = itemRepository.findById(itemId);
+
+        if (item == null){
+            throw new RuntimeException("아이템이 존재하지 않습니다.");
+        }
+
+        Item updateParam = new Item(request.getItemName(), request.getPrice(), request.getQuantity());
+        itemRepository.update(itemId, updateParam);
+    }
+
+    // 상품 삭제
+    @Transactional
+    public void deleteItem(Long itemId){
+        itemRepository.delete(itemId);
+    }
+}
+```
+- `@Transactional`: 영속성 컨텍스트의 변경내용을 한번에 동기화된다고 했는데 언제 동기화 되냐? 바로 `@Transactional`함수가 시작되고 끝날 때까지 등록된 변경사항들을 `em.flush`를 해준다.
+
+**ItemRepository**
+``` java
+@Repository
+public class ItemRepository {
+
+    @PersistenceContext
+    private EntityManager em;
+
+    public void save(Item item){
+        em.persist(item); // insert
+    }
+
+    public List<Item> findAll(){
+        return em.createQuery("select i from Item i", Item.class).getResultList();
+    }
+
+    public Item findById(Long itemId){
+        return em.find(Item.class, itemId);
+    }
+
+    public void update(Long itemId, Item updateParam){
+        Item item = em.find(Item.class, itemId);
+
+        item.setItemName(updateParam.getItemName());
+        item.setPrice(updateParam.getPrice());
+        item.setQuantity(updateParam.getQuantity());
+    }
+
+    public void delete(Long itemId){
+        Item item = em.find(Item.class, itemId);
+        em.remove(item);
+    }
+}
+```
+- `em.persist`(Insert): `@Entity`로 설정한 객체를 DB에 추가
+- `em.find`(Select): DB에 해당 객체를 PK를 이용하여 검색
+``` sql
+select member
+from Item
+where m.itemId = itemId
+```
+- `em.remove`(Delete): `Item`을 먼저 찾고, sql문 delete
+- `em.createQuery`: 두 개 이상의 값을 조회하여야 할 때는 특별한 쿼리를 써서 list배열로 가져온다.
+- Update: `Item`을 먼저 찾고, `Service 계층`에서 그 객체에 관한 정보를 변경하면 `@Transactional`이 끝날때, 즉 함수가 끝날때 자동으로 `DirtyCheck`에 의해 DB에 update 쿼리가 들어간다.
