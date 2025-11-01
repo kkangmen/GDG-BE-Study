@@ -2,6 +2,7 @@ package com.example.demo.member;
 
 import com.example.demo.member.dto.MemberCreateRequest;
 import com.example.demo.member.dto.MemberUpdateRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +14,8 @@ public class MemberService {
 
     public final MemberRepository memberRepository;
 
-    // 회원 생성
+    // 회원 등록
+    @Transactional
     public Long createMember(MemberCreateRequest request){
         Member exisitingMember = memberRepository.findByLoginId(request.getLoginId());
         if (exisitingMember != null){
@@ -29,12 +31,14 @@ public class MemberService {
         return member.getId();
     }
 
-    // 회원 정보 조회
+    // 회원 목록 조회
+    @Transactional
     public List<Member> getAllMembers(){
         return memberRepository.findAll();
     }
 
-    // 특정 회원 조회
+    // 개별 회원 정보 상세 조회
+    @Transactional
     public Member getMember(Long id){
         if (memberRepository.findById(id) == null){
             throw new RuntimeException("회원이 존재하지 않습니다.");
@@ -42,7 +46,8 @@ public class MemberService {
         return memberRepository.findById(id);
     }
 
-    // 특정 회원 수정
+    // 회원 정보 수정
+    @Transactional
     public void updateMember(Long id, MemberUpdateRequest request){
         Member member = memberRepository.findById(id);
 
@@ -53,7 +58,8 @@ public class MemberService {
         member.updateInfo(request.getPassword(), request.getPhoneNumber(), request.getAddress());
     }
 
-    // 특정 회원 삭제
+    // 회원 삭제
+    @Transactional
     public void deleteMember(Long id){
         memberRepository.deleteById(id);
     }

@@ -3,6 +3,7 @@ package com.example.demo.item;
 import com.example.demo.item.dto.ItemCreateRequest;
 import com.example.demo.item.dto.ItemUpdateRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/items")
@@ -21,6 +23,9 @@ public class ItemController {
     @PostMapping
     public ResponseEntity<Void> createItem(@RequestBody ItemCreateRequest request){
         Long itemId = itemService.createItem(request);
+
+        log.info("itemId: {}", itemId);
+
         return ResponseEntity.created(URI.create("/items/" + itemId)).build();
     }
 

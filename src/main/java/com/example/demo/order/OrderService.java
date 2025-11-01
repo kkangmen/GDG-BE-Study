@@ -1,5 +1,7 @@
 package com.example.demo.order;
 
+import com.example.demo.order.dto.OrderCreateRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,23 +15,32 @@ public class OrderService {
     private final OrderRepository orderrepository;
 
     // 주문 정보 생성
+    @Transactional
     public Long createOrder(@RequestBody OrderCreateRequest request){
-        Order order = new Order(request.getItem(), request.getQuantity());
+        Order order = new Order(request.getItemName(), request.getQuantity());
         orderrepository.save(order);
         return order.getOrderId();
     }
 
     // 주문 목록 조회
+    @Transactional
     public List<Order> getAllOrders(){
         return orderrepository.findAll();
     }
 
     // 개별 주문 정보 상세 조회
+    @Transactional
     public Order getOrder(Long orderId){
-        return orderrepository.findById(orderId);
+        Order order = orderrepository.findById(orderId);
+
+        if (order == null){
+            throw new RuntimeException("해당 주문 정보가 존재하지 않습니다.");
+        }
+        return order;
     }
 
     // 주문 취소
+    @Transactional
     public void deleteOrder(Long orderId){
         orderrepository.delete(orderId);
     }
