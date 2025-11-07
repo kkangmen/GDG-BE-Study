@@ -1,5 +1,7 @@
 package com.example.demo.order;
 
+import com.example.demo.member.Member;
+import com.example.demo.member.MemberRepository;
 import com.example.demo.order.dto.OrderCreateRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -13,13 +15,16 @@ import java.util.List;
 public class OrderService {
 
     private final OrderRepository orderrepository;
+    private final MemberRepository memberRepository;
 
     // 주문 정보 생성
     @Transactional
     public Long createOrder(@RequestBody OrderCreateRequest request){
-        Order order = new Order(request.getItemName(), request.getQuantity());
+        Member member = memberRepository.findById(request.getMemberId());
+
+        Order order = new Order(member, request.getDateTime(), request.getSum(), request.getStatus());
         orderrepository.save(order);
-        return order.getOrderId();
+        return order.getId();
     }
 
     // 주문 목록 조회
