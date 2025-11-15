@@ -1,5 +1,7 @@
-package com.example.demo.member;
+package com.example.demo.member.controller;
 
+import com.example.demo.member.entity.Member;
+import com.example.demo.member.service.MemberService;
 import com.example.demo.member.dto.MemberCreateRequest;
 import com.example.demo.member.dto.MemberUpdateRequest;
 import lombok.RequiredArgsConstructor;

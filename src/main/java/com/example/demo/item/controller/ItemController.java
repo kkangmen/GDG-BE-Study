@@ -1,7 +1,10 @@
-package com.example.demo.item;
+package com.example.demo.item.controller;
 
+import com.example.demo.item.service.ItemService;
+import com.example.demo.item.service.ItemServiceImpl;
 import com.example.demo.item.dto.ItemCreateRequest;
 import com.example.demo.item.dto.ItemUpdateRequest;
+import com.example.demo.item.entity.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

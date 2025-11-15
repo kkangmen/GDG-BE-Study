@@ -1,21 +1,26 @@
-package com.example.demo.member;
+package com.example.demo.member.service;
 
+import com.example.demo.member.entity.Member;
 import com.example.demo.member.dto.MemberCreateRequest;
 import com.example.demo.member.dto.MemberUpdateRequest;
+import com.example.demo.member.repository.MemberRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MemberService {
+@Primary
+public class MemberServiceImpl implements MemberService{
 
-    public final MemberRepository memberRepository;
+    private final MemberRepository memberRepository;
 
     // 회원 등록
     @Transactional
+    @Override
     public Long createMember(MemberCreateRequest request){
         Member exisitingMember = memberRepository.findByLoginId(request.getLoginId());
         if (exisitingMember != null){
@@ -33,12 +38,14 @@ public class MemberService {
 
     // 회원 목록 조회
     @Transactional
+    @Override
     public List<Member> getAllMembers(){
         return memberRepository.findAll();
     }
 
     // 개별 회원 정보 상세 조회
     @Transactional
+    @Override
     public Member getMember(Long id){
         if (memberRepository.findById(id) == null){
             throw new RuntimeException("회원이 존재하지 않습니다.");
@@ -48,6 +55,7 @@ public class MemberService {
 
     // 회원 정보 수정
     @Transactional
+    @Override
     public void updateMember(Long id, MemberUpdateRequest request){
         Member member = memberRepository.findById(id);
 
@@ -60,6 +68,7 @@ public class MemberService {
 
     // 회원 삭제
     @Transactional
+    @Override
     public void deleteMember(Long id){
         memberRepository.deleteById(id);
     }

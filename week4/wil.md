@@ -200,8 +200,8 @@ public class Item {
 ``` java
 package com.example.demo.order;
 
-import com.example.demo.item.Item;
-import com.example.demo.member.Member;
+import com.example.demo.item.entity.Item;
+import com.example.demo.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.CustomLog;
 import lombok.Getter;

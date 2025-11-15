@@ -1,16 +1,12 @@
-package com.example.demo.order;
+package com.example.demo.order.entity;
 
-import com.example.demo.item.Item;
-import com.example.demo.member.Member;
+import com.example.demo.member.entity.Member;
 import jakarta.persistence.*;
-import lombok.CustomLog;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Setter
