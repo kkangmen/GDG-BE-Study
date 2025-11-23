@@ -1,5 +1,7 @@
 package com.example.demo.item.service;
 
+import com.example.demo.common.exception.NotFoundException;
+import com.example.demo.common.message.ErrorMessage;
 import com.example.demo.item.dto.ItemCreateRequest;
 import com.example.demo.item.dto.ItemUpdateRequest;
 import com.example.demo.item.entity.Item;
@@ -43,7 +45,7 @@ public class ItemServiceImpl implements ItemService{
         Item item = itemRepository.findById(itemId);
 
         if (item == null){
-            throw new RuntimeException("아이템이 존재하지 않습니다.");
+            throw new NotFoundException(ErrorMessage.ITEM_NOT_FOUND);
         }
 
         return item;
@@ -56,7 +58,7 @@ public class ItemServiceImpl implements ItemService{
         Item item = itemRepository.findById(itemId);
 
         if (item == null){
-            throw new RuntimeException("아이템이 존재하지 않습니다.");
+            throw new NotFoundException(ErrorMessage.ITEM_NOT_FOUND);
         }
 
         Item updateParam = new Item(request.getItemName(), request.getPrice(), request.getQuantity());

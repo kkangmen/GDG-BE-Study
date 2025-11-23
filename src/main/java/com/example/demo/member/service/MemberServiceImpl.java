@@ -1,5 +1,8 @@
 package com.example.demo.member.service;
 
+import com.example.demo.common.exception.BadRequestException;
+import com.example.demo.common.exception.NotFoundException;
+import com.example.demo.common.message.ErrorMessage;
 import com.example.demo.member.entity.Member;
 import com.example.demo.member.dto.MemberCreateRequest;
 import com.example.demo.member.dto.MemberUpdateRequest;
@@ -24,7 +27,7 @@ public class MemberServiceImpl implements MemberService{
     public Long createMember(MemberCreateRequest request){
         Member exisitingMember = memberRepository.findByLoginId(request.getLoginId());
         if (exisitingMember != null){
-            throw new RuntimeException("이미 존재하는 로그인 아이디입니다." + request.getLoginId());
+            throw new BadRequestException(ErrorMessage.MEMBER_ALREADY_EXISTS);
         }
 
         Member member = new Member(
@@ -48,7 +51,7 @@ public class MemberServiceImpl implements MemberService{
     @Override
     public Member getMember(Long id){
         if (memberRepository.findById(id) == null){
-            throw new RuntimeException("회원이 존재하지 않습니다.");
+            throw new NotFoundException(ErrorMessage.MEMBER_NOT_FOUND);
         }
         return memberRepository.findById(id);
     }
@@ -60,10 +63,14 @@ public class MemberServiceImpl implements MemberService{
         Member member = memberRepository.findById(id);
 
         if (member == null){
-            throw new RuntimeException("회원을 찾을 수 없습니다.");
+            throw new NotFoundException(ErrorMessage.MEMBER_NOT_FOUND);
         }
 
-        member.updateInfo(request.getPassword(), request.getPhoneNumber(), request.getAddress());
+        String password = (request.getPassword() != null) ? request.getPassword() : member.getPassword();
+        String phoneNumber = (request.getPhoneNumber() != null) ? request.getPhoneNumber() : member.getPhoneNumber();
+        String address = (request.getAddress() != null) ? request.getAddress() : member.getAddress();
+
+        member.updateInfo(password, phoneNumber, address);
     }
 
     // 회원 삭제
@@ -72,5 +79,4 @@ public class MemberServiceImpl implements MemberService{
     public void deleteMember(Long id){
         memberRepository.deleteById(id);
     }
-
 }
